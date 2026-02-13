@@ -36,18 +36,15 @@ button:hover {transform:scale(1.05); background:#ff69b4;}
 .confetti {width:10px;height:10px;position:fixed;top:-10px;animation:fall 3s linear infinite;}
 @keyframes fall {to {transform:translateY(100vh) rotate(360deg);}}
 
-/* Tetris full screen */
-#tetris-screen {
-    width:100vw; height:100vh;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    align-items:center;
-    background: linear-gradient(135deg, #ff4e8b, #ff9a9e);
-    position:relative;
-}
-#tetris {background:#000;width:90vw;height:70vh;position:relative;}
-#tetris-message {margin-top:20px;font-size:5vw;}
+/* Memory Cards */
+#memory-game {width:100vw;height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;}
+.memory-grid {display:grid;grid-template-columns:repeat(4,70px);grid-gap:15px;margin-top:20px;}
+.card {width:70px;height:70px;background:#fff;color:#ff4e8b;font-size:36px;display:flex;justify-content:center;align-items:center;cursor:pointer;user-select:none;border-radius:12px;}
+.card.flipped {background:#ff2e63;color:white;}
+
+/* Balloon Pop */
+#balloon-game {width:100vw;height:100vh;position:relative;overflow:hidden;}
+.balloon {position:absolute;width:60px;height:80px;background:red;border-radius:50%;cursor:pointer;font-size:2rem;text-align:center;line-height:80px;user-select:none;}
 
 /* Sudoku */
 #sudoku-screen {display:flex;flex-direction:column;align-items:center;justify-content:center;width:100vw;height:100vh;}
@@ -55,23 +52,24 @@ button:hover {transform:scale(1.05); background:#ff69b4;}
 .sudoku-cell {width:50px;height:50px;background:#fff;color:#000;font-size:24px;display:flex;justify-content:center;align-items:center;cursor:pointer;user-select:none;}
 .sudoku-cell.prefilled {background:#ddd;cursor:default;}
 
+/* Valentine Screen */
 .container {width:100vw;height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;position:relative;padding:20px;box-sizing:border-box;}
 #countdown {font-size:8vw;margin:20px;}
 </style>
 </head>
 <body>
 
-<!-- TETRIS -->
-<div id="tetris-screen">
-    <h1>🎮 Tetris Valentine 💘</h1>
-    <div id="tetris"></div>
-    <div id="tetris-message">🎮 Finish the game to continue 💘</div>
-    <div>
-        <button onclick="movePiece(-1)">◀️</button>
-        <button onclick="rotatePiece()">🔄</button>
-        <button onclick="movePiece(1)">▶️</button>
-        <button onclick="dropPiece()">⬇️</button>
-    </div>
+<!-- MEMORY GAME -->
+<div id="memory-game">
+    <h1>🧡 Memory Match 💘</h1>
+    <p>Match all the hearts to continue!</p>
+    <div class="memory-grid" id="memory-grid"></div>
+</div>
+
+<!-- BALLOON POP -->
+<div id="balloon-game" class="hidden">
+    <h1>🎈 Balloon Pop 💘</h1>
+    <p>Pop 10 balloons to continue!</p>
 </div>
 
 <!-- SUDOKU -->
@@ -99,50 +97,65 @@ button:hover {transform:scale(1.05); background:#ff69b4;}
 </div>
 
 <script>
-// ================= TETRIS =================
-const COLS=10, ROWS=20;
-let board=Array.from({length:ROWS},()=>Array(COLS).fill(0));
-let currentPiece, gameInterval;
-const SHAPES=[
-    [[1,1,1],[0,1,0]],
-    [[2,2],[2,2]],
-    [[0,3,3],[3,3,0]],
-    [[4,4,0],[0,4,4]],
-    [[5,5,5,5]]
-];
-const COLOR="#fff";
-
-function randomPiece(){let shape=SHAPES[Math.floor(Math.random()*SHAPES.length)]; return {shape,x:3,y:0};}
-function draw(){
-    const div=document.getElementById("tetris");
-    div.innerHTML="";
-    board.forEach((row,r)=>{row.forEach((cell,c)=>{if(cell){let block=document.createElement("div");
-        block.style.position="absolute"; block.style.width="20px"; block.style.height="20px";
-        block.style.background=COLOR; block.style.border="1px solid #000";
-        block.style.left=(c*20)+"px"; block.style.top=(r*20)+"px"; div.appendChild(block);}
-    });});
-    if(currentPiece){currentPiece.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v){
-        let block=document.createElement("div"); block.style.position="absolute"; block.style.width="20px"; block.style.height="20px";
-        block.style.background=COLOR; block.style.border="1px solid #000";
-        block.style.left=((currentPiece.x+c)*20)+"px"; block.style.top=((currentPiece.y+r)*20)+"px";
-        div.appendChild(block);
-    }}));}
+// ================= MEMORY GAME =================
+const emojis = ["💖","💖","💌","💌","🍫","🍫","🌹","🌹"];
+let firstCard=null, secondCard=null, matches=0;
+const memoryGrid = document.getElementById("memory-grid");
+function shuffleArray(array){for(let i=array.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]];} return array;}
+function createMemoryGrid(){
+    const cards = shuffleArray([...emojis]);
+    cards.forEach((emoji,index)=>{
+        const card=document.createElement("div");
+        card.className="card"; card.dataset.emoji=emoji;
+        card.addEventListener("click",()=>flipCard(card));
+        memoryGrid.appendChild(card);
+    });
 }
-function collide(x,y,shape){return shape.some((row,r)=>row.some((v,c)=>v && (currentPiece.y+y+r>=ROWS||currentPiece.x+x+c<0||currentPiece.x+x+c>=COLS||board[currentPiece.y+y+r][currentPiece.x+x+c])));}
-function merge(){currentPiece.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v)board[currentPiece.y+r][currentPiece.x+c]=v;}));}
-function rotatePiece(){let rotated=currentPiece.shape[0].map((col,i)=>currentPiece.shape.map(row=>row[i]).reverse()); if(!collide(0,0,rotated)) currentPiece.shape=rotated; draw();}
-function movePiece(dir){if(!collide(dir,0,currentPiece.shape)) currentPiece.x+=dir; draw();}
-function dropPiece(){if(!collide(0,1,currentPiece.shape)){currentPiece.y++;} else {merge(); clearLines(); currentPiece=randomPiece(); if(collide(0,0,currentPiece.shape)) gameOver();} draw();}
-function clearLines(){board=board.filter(row=>row.some(v=>v===0)); while(board.length<ROWS) board.unshift(Array(COLS).fill(0));}
-function gameOver(){clearInterval(gameInterval); setTimeout(endTetris,300);}
-function tetrisLoop(){dropPiece();}
-function startTetrisGame(){currentPiece=randomPiece(); draw(); gameInterval=setInterval(tetrisLoop,600);}
-function endTetris(){document.getElementById("tetris-screen").classList.add("hidden");document.getElementById("sudoku-screen").classList.remove("hidden"); createSudokuGrid();}
-startTetrisGame();
+function flipCard(card){
+    if(card.classList.contains("flipped")||secondCard) return;
+    card.classList.add("flipped"); card.innerText=card.dataset.emoji;
+    if(!firstCard) {firstCard=card; return;}
+    secondCard=card;
+    if(firstCard.dataset.emoji===secondCard.dataset.emoji){
+        firstCard=null; secondCard=null; matches++;
+        if(matches===emojis.length/2) setTimeout(startBalloonGame,500);
+    } else {setTimeout(()=>{firstCard.innerText="";secondCard.innerText="";firstCard.classList.remove("flipped");secondCard.classList.remove("flipped");firstCard=null;secondCard=null;},800);}
+}
+createMemoryGrid();
+
+// ================= BALLOON POP =================
+let balloonCount=0;
+function startBalloonGame(){
+    document.getElementById("memory-game").classList.add("hidden");
+    const game = document.getElementById("balloon-game");
+    game.classList.remove("hidden");
+    balloonCount=0;
+    for(let i=0;i<10;i++){createBalloon();}
+}
+function createBalloon(){
+    const balloon = document.createElement("div");
+    balloon.className="balloon"; balloon.innerText="🎈";
+    const x=Math.random()*(window.innerWidth-60);
+    const y=window.innerHeight + Math.random()*100;
+    balloon.style.left=x+"px"; balloon.style.top=y+"px";
+    balloon.style.transition="top 5s linear";
+    document.getElementById("balloon-game").appendChild(balloon);
+    setTimeout(()=>{balloon.style.top="-100px";},50);
+    balloon.addEventListener("click",()=>{
+        balloon.remove();
+        balloonCount++;
+        if(balloonCount>=10) setTimeout(startSudokuGame,300);
+    });
+}
 
 // ================= SUDOKU 4x4 =================
 let sudokuSolution=[[1,2,3,4],[3,4,1,2],[4,1,2,3],[2,3,4,1]];
 let prefilled=[[1,0,0,4],[0,4,0,0],[0,0,2,0],[2,0,0,1]];
+function startSudokuGame(){
+    document.getElementById("balloon-game").classList.add("hidden");
+    document.getElementById("sudoku-screen").classList.remove("hidden");
+    createSudokuGrid();
+}
 function createSudokuGrid(){
     const grid=document.getElementById("sudoku-grid"); grid.innerHTML="";
     for(let r=0;r<4;r++){for(let c=0;c<4;c++){
