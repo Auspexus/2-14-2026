@@ -123,6 +123,7 @@ button:hover {
 <div class="container hidden" id="celebration">
     <h1>🎉 CONGRATULATIONS 🎉</h1>
     <h2>You are now officially stuck with me 😌💞</h2>
+    <h2 id="extraMessage" style="margin-top:20px;"></h2>
 </div>
 
 <script>
@@ -140,6 +141,9 @@ const SHAPES = [
     [[5,5,5,5]]
 ];
 
+// White color for all blocks
+const COLOR = "#fff";
+
 function randomPiece() {
     let shape = SHAPES[Math.floor(Math.random()*SHAPES.length)];
     return { shape, x: 3, y: 0 };
@@ -155,7 +159,7 @@ function draw() {
                 block.style.position="absolute";
                 block.style.width="20px";
                 block.style.height="20px";
-                block.style.background="#fff";
+                block.style.background=COLOR;
                 block.style.left=(c*20)+"px";
                 block.style.top=(r*20)+"px";
                 div.appendChild(block);
@@ -170,7 +174,7 @@ function draw() {
                     block.style.position="absolute";
                     block.style.width="20px";
                     block.style.height="20px";
-                    block.style.background="#fff";
+                    block.style.background=COLOR;
                     block.style.left=((currentPiece.x+c)*20)+"px";
                     block.style.top=((currentPiece.y+r)*20)+"px";
                     div.appendChild(block);
@@ -187,7 +191,7 @@ function collide(x, y, shape) {
                 currentPiece.y + y + r >= ROWS ||
                 currentPiece.x + x + c < 0 ||
                 currentPiece.x + x + c >= COLS ||
-                board[currentPiece.y + y + r][currentPiece.x + x + c]
+                board[currentPiece.y + y + r][currentPiece.x + c]
             )
         )
     );
@@ -253,7 +257,6 @@ function endTetris() {
     moveNoMaybeButtons();
 }
 
-// start game
 startTetrisGame();
 
 // ------------------ FINAL VALENTINE ------------------
@@ -292,6 +295,8 @@ function celebrate() {
     buttonsActive=false;
     document.getElementById("final").classList.add("hidden");
     document.getElementById("celebration").classList.remove("hidden");
+
+    // Confetti
     for (let i=0; i<100; i++){
         let c=document.createElement("div");
         c.className="confetti";
@@ -299,6 +304,9 @@ function celebrate() {
         c.style.left=Math.random()*100+"vw";
         document.body.appendChild(c);
     }
+
+    // Extra message
+    document.getElementById("extraMessage").innerText = "See you tomorrow at 7pm 💖";
 }
 </script>
 </body>
