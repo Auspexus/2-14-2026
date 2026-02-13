@@ -29,12 +29,17 @@ button {
     transition: 0.3s;
 }
 
+button:hover {
+    transform: scale(1.1) rotate(-2deg);
+    background-color: #ff69b4;
+}
+
 .yes-btn {
     background-color: #fff;
     color: #ff4e8b;
 }
 
-.no-btn {
+.no-btn, .maybe-btn {
     background-color: #ff2e63;
     color: white;
     position: absolute;
@@ -58,67 +63,177 @@ button {
         transform: translateY(100vh) rotate(360deg);
     }
 }
+
+#countdown {
+    font-size: 24px;
+    margin: 20px;
+    font-weight: bold;
+}
 </style>
 </head>
 
 <body>
 
-<div class="container" id="quiz">
-    <h1>Valentine Qualification Test 💖</h1>
-    <p>Question 1: Who is the luckiest girl alive?</p>
-    <button onclick="wrongAnswer()">A) Beyoncé</button>
-    <button onclick="wrongAnswer()">B) Some random model</button>
-    <button onclick="correctAnswer()">C) Me obviously</button>
+<!-- Mini Game Screen -->
+<div class="container" id="game">
+    <h1>Mini Valentine Game 💖</h1>
+    <p>Click all the hearts before time runs out!</p>
+    <div id="hearts-container"></div>
+    <div id="game-timer">Time left: 10s</div>
 </div>
 
+<!-- Quiz Screen -->
+<div class="container hidden" id="quiz">
+    <h1>Valentine Qualification Test 💖</h1>
+    <p>Who is the luckiest girl alive?</p>
+    <button onclick="wrongAnswer()">Hanni Pham</button>
+    <button onclick="wrongAnswer()">Jennie</button>
+    <button onclick="correctAnswer()">Nicole</button>
+</div>
+
+<!-- Countdown & Final Question -->
 <div class="container hidden" id="final">
     <h1>Will You Be My Valentine? 💘</h1>
+    <div id="countdown">5</div>
     <button class="yes-btn" onclick="celebrate()">YES 💖</button>
     <button class="no-btn" id="noBtn">no 🙄</button>
+    <button class="maybe-btn" id="maybeBtn">maybe 🤔</button>
 </div>
 
+<!-- Celebration Screen -->
 <div class="container hidden" id="celebration">
     <h1>🎉 CONGRATULATIONS 🎉</h1>
     <h2>You are now officially stuck with me 😌💞</h2>
 </div>
 
 <script>
+// --------------------- Mini Game ---------------------
+let heartsClicked = 0;
+const totalHearts = 5;
+let gameTime = 10;
+const heartsContainer = document.getElementById("hearts-container");
+const gameTimer = document.getElementById("game-timer");
+
+function createHearts() {
+    for (let i = 0; i < totalHearts; i++) {
+        const heart = document.createElement("div");
+        heart.innerText = "💖";
+        heart.style.position = "absolute";
+        heart.style.fontSize = "32px";
+        heart.style.top = Math.random() * 80 + "vh";
+        heart.style.left = Math.random() * 80 + "vw";
+        heart.style.cursor = "pointer";
+        heart.onclick = () => {
+            heart.remove();
+            heartsClicked++;
+            if (heartsClicked === totalHearts) {
+                startQuiz();
+            }
+        };
+        heartsContainer.appendChild(heart);
+    }
+}
+
+function startGameTimer() {
+    const timer = setInterval(() => {
+        gameTime--;
+        gameTimer.innerText = "Time left: " + gameTime + "s";
+        if (gameTime <= 0) {
+            clearInterval(timer);
+            startQuiz();
+        }
+    }, 1000);
+}
+
+function startQuiz() {
+    document.getElementById("game").classList.add("hidden");
+    document.getElementById("quiz").classList.remove("hidden");
+}
+
+createHearts();
+startGameTimer();
+
+// --------------------- Quiz ---------------------
 function wrongAnswer() {
-    alert("Incorrect. Please try again, future Valentine 😌");
+    const msgs = [
+        "Oops, not quite 😅",
+        "Try again, future Valentine 💖",
+        "Close… but I know you can do it 😌",
+        "Are you even paying attention? 😏"
+    ];
+    alert(msgs[Math.floor(Math.random() * msgs.length)]);
 }
 
 function correctAnswer() {
     document.getElementById("quiz").classList.add("hidden");
     document.getElementById("final").classList.remove("hidden");
-    moveNoButton();
+    startCountdown();
+    moveNoMaybeButtons();
 }
 
-function moveNoButton() {
+// --------------------- Countdown ---------------------
+function startCountdown() {
+    let counter = 5;
+    const countdown = document.getElementById("countdown");
+    const interval = setInterval(() => {
+        counter--;
+        countdown.innerText = counter;
+        if (counter <= 0) {
+            clearInterval(interval);
+            countdown.innerText = "Time's up! Click YES 😏";
+        }
+    }, 1000);
+}
+
+// --------------------- Moving Buttons ---------------------
+function moveNoMaybeButtons() {
     const noBtn = document.getElementById("noBtn");
-    noBtn.addEventListener("mouseover", () => {
-        const x = Math.random() * (window.innerWidth - 100);
-        const y = Math.random() * (window.innerHeight - 50);
-        noBtn.style.left = x + "px";
-        noBtn.style.top = y + "px";
+    const maybeBtn = document.getElementById("maybeBtn");
+    [noBtn, maybeBtn].forEach(btn => {
+        btn.addEventListener("mouseover", () => {
+            const x = Math.random() * (window.innerWidth - 100);
+            const y = Math.random() * (window.innerHeight - 50);
+            btn.style.left = x + "px";
+            btn.style.top = y + "px";
+        });
     });
 }
 
+// --------------------- Celebration ---------------------
 function celebrate() {
     document.getElementById("final").classList.add("hidden");
     document.getElementById("celebration").classList.remove("hidden");
-    createConfetti();
-}
 
-function createConfetti() {
+    // Confetti
     for (let i = 0; i < 100; i++) {
         let confetti = document.createElement("div");
         confetti.classList.add("confetti");
         confetti.style.left = Math.random() * 100 + "vw";
-        confetti.style.backgroundColor = 
-            ["#fff","#ff2e63","#ffd700","#00f5d4"][Math.floor(Math.random()*4)];
+        confetti.style.backgroundColor = ["#fff","#ff2e63","#ffd700","#00f5d4"][Math.floor(Math.random()*4)];
         confetti.style.animationDuration = (Math.random() * 3 + 2) + "s";
         document.body.appendChild(confetti);
     }
+
+    // Floating Hearts
+    for (let i = 0; i < 50; i++) {
+        let heart = document.createElement("div");
+        heart.innerText = "💖";
+        heart.style.position = "fixed";
+        heart.style.left = Math.random() * 100 + "vw";
+        heart.style.top = "100vh";
+        heart.style.fontSize = Math.random() * 30 + 20 + "px";
+        document.body.appendChild(heart);
+        floatHeart(heart);
+    }
+}
+
+function floatHeart(el) {
+    let top = window.innerHeight;
+    let id = setInterval(() => {
+        top -= Math.random() * 5 + 2;
+        el.style.top = top + "px";
+        if (top < -50) el.remove();
+    }, 20);
 }
 </script>
 
