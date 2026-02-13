@@ -15,7 +15,7 @@ body {
     overflow: hidden;
 }
 
-/* GAME SCREEN */
+/* TETRIS SCREEN */
 #tetris-screen {
     display: flex;
     flex-direction: column;
@@ -25,7 +25,7 @@ body {
 }
 
 #tetris {
-    background: #000;
+    background: #000; /* black background */
     width: 200px;
     height: 400px;
     position: relative;
@@ -141,7 +141,7 @@ const SHAPES = [
     [[5,5,5,5]]
 ];
 
-// White color for all blocks
+// WHITE COLOR WITH BORDER
 const COLOR = "#fff";
 
 function randomPiece() {
@@ -159,13 +159,15 @@ function draw() {
                 block.style.position="absolute";
                 block.style.width="20px";
                 block.style.height="20px";
-                block.style.background=COLOR;
-                block.style.left=(c*20)+"px";
-                block.style.top=(r*20)+"px";
+                block.style.background = COLOR;
+                block.style.border = "1px solid #000"; // separates blocks
+                block.style.left = (c*20)+"px";
+                block.style.top = (r*20)+"px";
                 div.appendChild(block);
             }
         });
     });
+
     if(currentPiece) {
         currentPiece.shape.forEach((row, r) =>
             row.forEach((v, c) => {
@@ -174,9 +176,10 @@ function draw() {
                     block.style.position="absolute";
                     block.style.width="20px";
                     block.style.height="20px";
-                    block.style.background=COLOR;
-                    block.style.left=((currentPiece.x+c)*20)+"px";
-                    block.style.top=((currentPiece.y+r)*20)+"px";
+                    block.style.background = COLOR;
+                    block.style.border = "1px solid #000";
+                    block.style.left = ((currentPiece.x+c)*20)+"px";
+                    block.style.top = ((currentPiece.y+r)*20)+"px";
                     div.appendChild(block);
                 }
             })
