@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Operation: Become My Valentine 💘</title>
 
 <style>
@@ -20,8 +20,8 @@ body {
 }
 
 button {
-    padding: 12px 25px;
-    font-size: 18px;
+    padding: 12px 5vw;
+    font-size: 4vw;
     border: none;
     border-radius: 25px;
     cursor: pointer;
@@ -65,9 +65,14 @@ button:hover {
 }
 
 #countdown {
-    font-size: 24px;
+    font-size: 6vw;
     margin: 20px;
     font-weight: bold;
+}
+
+#hearts-container div {
+    user-select: none;
+    -webkit-user-select: none;
 }
 </style>
 </head>
@@ -119,18 +124,21 @@ function createHearts() {
         const heart = document.createElement("div");
         heart.innerText = "💖";
         heart.style.position = "absolute";
-        heart.style.fontSize = "32px";
+        heart.style.fontSize = "10vw";
         heart.style.top = Math.random() * 80 + "vh";
-        heart.style.left = Math.random() * 80 + "vw";
+        heart.style.left = Math.random() * 70 + "vw";
         heart.style.cursor = "pointer";
-        heart.onclick = () => {
-            heart.remove();
-            heartsClicked++;
-            if (heartsClicked === totalHearts) {
-                startQuiz();
-            }
-        };
+        heart.addEventListener("click", removeHeart);
+        heart.addEventListener("touchstart", removeHeart);
         heartsContainer.appendChild(heart);
+    }
+}
+
+function removeHeart(e) {
+    e.target.remove();
+    heartsClicked++;
+    if (heartsClicked === totalHearts) {
+        startQuiz();
     }
 }
 
@@ -164,6 +172,8 @@ function wrongAnswer() {
     alert(msgs[Math.floor(Math.random() * msgs.length)]);
 }
 
+let buttonsActive = true;
+
 function correctAnswer() {
     document.getElementById("quiz").classList.add("hidden");
     document.getElementById("final").classList.remove("hidden");
@@ -190,17 +200,21 @@ function moveNoMaybeButtons() {
     const noBtn = document.getElementById("noBtn");
     const maybeBtn = document.getElementById("maybeBtn");
     [noBtn, maybeBtn].forEach(btn => {
-        btn.addEventListener("mouseover", () => {
+        const dodge = () => {
+            if(!buttonsActive) return;
             const x = Math.random() * (window.innerWidth - 100);
             const y = Math.random() * (window.innerHeight - 50);
             btn.style.left = x + "px";
             btn.style.top = y + "px";
-        });
+        };
+        btn.addEventListener("mouseover", dodge);
+        btn.addEventListener("touchstart", dodge);
     });
 }
 
 // --------------------- Celebration ---------------------
 function celebrate() {
+    buttonsActive = false;
     document.getElementById("final").classList.add("hidden");
     document.getElementById("celebration").classList.remove("hidden");
 
