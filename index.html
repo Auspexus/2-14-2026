@@ -3,109 +3,114 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Operation: Become My Valentine 💘</title>
-
+<title>Tetris Valentine 💘</title>
 <style>
+/* GLOBAL */
 body {
     margin: 0;
     font-family: Arial, sans-serif;
-    text-align: center;
     background: linear-gradient(135deg, #ff4e8b, #ff9a9e);
     color: white;
+    text-align: center;
     overflow: hidden;
 }
 
-/* Full-screen container for each stage */
+/* GAME SCREEN */
+#tetris-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+#tetris {
+    background: #000;
+    width: 200px;
+    height: 400px;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+/* VALENTINE SCREEN */
 .container {
     width: 100vw;
     height: 100vh;
-    padding: 40px;
-    box-sizing: border-box;
-    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding: 30px;
+    box-sizing: border-box;
+    position: relative;
 }
 
 button {
-    padding: 3vw 5vw;
     font-size: 4vw;
+    padding: 3vw 5vw;
+    margin: 8px;
     border: none;
     border-radius: 25px;
     cursor: pointer;
-    margin: 10px;
     transition: 0.3s;
 }
 
 button:hover {
-    transform: scale(1.1) rotate(-2deg);
-    background-color: #ff69b4;
+    transform: scale(1.05);
+    background: #ff69b4;
 }
 
 .yes-btn {
-    background-color: #fff;
+    background: #fff;
     color: #ff4e8b;
 }
 
 .no-btn, .maybe-btn {
-    background-color: #ff2e63;
+    background: #ff2e63;
     color: white;
     position: absolute;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .confetti {
-    position: fixed;
     width: 10px;
     height: 10px;
-    background: white;
+    position: fixed;
     top: -10px;
     animation: fall 3s linear infinite;
 }
 
 @keyframes fall {
-    to {
-        transform: translateY(100vh) rotate(360deg);
-    }
+    to { transform: translateY(100vh) rotate(360deg); }
 }
 
+/* COUNTDOWN */
 #countdown {
     font-size: 8vw;
     margin: 20px;
-    font-weight: bold;
-}
-
-#hearts-container div {
-    user-select: none;
-    -webkit-user-select: none;
 }
 </style>
 </head>
 
 <body>
 
-<!-- Mini Game Screen -->
-<div class="container" id="game">
-    <h1>Mini Valentine Game 💖</h1>
-    <p>Click all the hearts before time runs out!</p>
-    <div id="hearts-container"></div>
-    <div id="game-timer">Time left: 10s</div>
+<!-- TETRIS SCREEN -->
+<div id="tetris-screen">
+    <h1>🎮 Tetris Valentine 💘</h1>
+    <div id="tetris"></div>
+    <div>
+        <button onclick="movePiece(-1)">◀️</button>
+        <button onclick="rotatePiece()">🔄</button>
+        <button onclick="movePiece(1)">▶️</button>
+        <button onclick="dropPiece()">⬇️</button>
+    </div>
+    <p>Use buttons to play! When the game ends, the Valentine question appears.</p>
 </div>
 
-<!-- Quiz Screen -->
-<div class="container hidden" id="quiz">
-    <h1>Valentine Qualification Test 💖</h1>
-    <p>Who is the luckiest girl alive?</p>
-    <button onclick="wrongAnswer()">Hanni Pham</button>
-    <button onclick="wrongAnswer()">Jennie</button>
-    <button onclick="correctAnswer()">Nicole</button>
-</div>
-
-<!-- Countdown & Final Question -->
+<!-- FINAL VALENTINE SCREEN -->
 <div class="container hidden" id="final">
     <h1>Will You Be My Valentine? 💘</h1>
     <div id="countdown">5</div>
@@ -114,165 +119,187 @@ button:hover {
     <button class="maybe-btn" id="maybeBtn">maybe 🤔</button>
 </div>
 
-<!-- Celebration Screen -->
+<!-- CELEBRATION -->
 <div class="container hidden" id="celebration">
     <h1>🎉 CONGRATULATIONS 🎉</h1>
     <h2>You are now officially stuck with me 😌💞</h2>
 </div>
 
 <script>
-// --------------------- Mini Game ---------------------
-let heartsClicked = 0;
-const totalHearts = 5;
-let gameTime = 10;
-const heartsContainer = document.getElementById("hearts-container");
-const gameTimer = document.getElementById("game-timer");
+// ------------------ SIMPLE TETRIS ------------------
+const COLS = 10, ROWS = 20;
+let board = Array.from({ length: ROWS }, () => Array(COLS).fill(0));
+let currentPiece, gameInterval;
 
-function createHearts() {
-    for (let i = 0; i < totalHearts; i++) {
-        const heart = document.createElement("div");
-        heart.innerText = "💖";
-        heart.style.position = "absolute";
-        heart.style.fontSize = "10vw";
-        heart.style.top = Math.random() * 80 + "vh";
-        heart.style.left = Math.random() * 70 + "vw";
-        heart.style.cursor = "pointer";
-        heart.addEventListener("click", removeHeart);
-        heart.addEventListener("touchstart", removeHeart);
-        heartsContainer.appendChild(heart);
+// PIECES
+const SHAPES = [
+    [[1,1,1],[0,1,0]],
+    [[2,2],[2,2]],
+    [[0,3,3],[3,3,0]],
+    [[4,4,0],[0,4,4]],
+    [[5,5,5,5]]
+];
+
+function randomPiece() {
+    let shape = SHAPES[Math.floor(Math.random()*SHAPES.length)];
+    return { shape, x: 3, y: 0 };
+}
+
+function draw() {
+    const div = document.getElementById("tetris");
+    div.innerHTML = "";
+    board.forEach((row, r) => {
+        row.forEach((cell, c) => {
+            if(cell) {
+                let block = document.createElement("div");
+                block.style.position="absolute";
+                block.style.width="20px";
+                block.style.height="20px";
+                block.style.background="#fff";
+                block.style.left=(c*20)+"px";
+                block.style.top=(r*20)+"px";
+                div.appendChild(block);
+            }
+        });
+    });
+    if(currentPiece) {
+        currentPiece.shape.forEach((row, r) =>
+            row.forEach((v, c) => {
+                if(v) {
+                    let block = document.createElement("div");
+                    block.style.position="absolute";
+                    block.style.width="20px";
+                    block.style.height="20px";
+                    block.style.background="#fff";
+                    block.style.left=((currentPiece.x+c)*20)+"px";
+                    block.style.top=((currentPiece.y+r)*20)+"px";
+                    div.appendChild(block);
+                }
+            })
+        );
     }
 }
 
-function removeHeart(e) {
-    e.stopPropagation();
-    e.preventDefault();
-    e.target.remove();
-    heartsClicked++;
-    if (heartsClicked === totalHearts) startQuiz();
+function collide(x, y, shape) {
+    return shape.some((row, r) => 
+        row.some((v, c) => 
+            v && (
+                currentPiece.y + y + r >= ROWS ||
+                currentPiece.x + x + c < 0 ||
+                currentPiece.x + x + c >= COLS ||
+                board[currentPiece.y + y + r][currentPiece.x + x + c]
+            )
+        )
+    );
 }
 
-function startGameTimer() {
-    const timer = setInterval(() => {
-        gameTime--;
-        gameTimer.innerText = "Time left: " + gameTime + "s";
-        if (gameTime <= 0) {
-            clearInterval(timer);
-            startQuiz();
-        }
-    }, 1000);
+function merge() {
+    currentPiece.shape.forEach((row, r) =>
+        row.forEach((v, c) => {
+            if(v) board[currentPiece.y+r][currentPiece.x+c] = v;
+        })
+    );
 }
 
-function startQuiz() {
-    document.getElementById("game").classList.add("hidden");
-    document.getElementById("quiz").classList.remove("hidden");
-    document.getElementById("quiz").scrollIntoView({behavior: "smooth"});
+function rotatePiece() {
+    let rotated = currentPiece.shape[0].map((col, i) => 
+        currentPiece.shape.map(row => row[i]).reverse()
+    );
+    if(!collide(0,0,rotated)) currentPiece.shape = rotated;
+    draw();
 }
 
-createHearts();
-startGameTimer();
-
-// --------------------- Quiz ---------------------
-function wrongAnswer() {
-    const msgs = [
-        "Oops, not quite 😅",
-        "Try again, future Valentine 💖",
-        "Close… but I know you can do it 😌",
-        "Are you even paying attention? 😏"
-    ];
-    alert(msgs[Math.floor(Math.random() * msgs.length)]);
+function movePiece(dir) {
+    if(!collide(dir,0,currentPiece.shape)) currentPiece.x += dir;
+    draw();
 }
 
-let buttonsActive = true;
-let countdownInterval;
+function dropPiece() {
+    if(!collide(0,1,currentPiece.shape)) {
+        currentPiece.y++;
+    } else {
+        merge();
+        clearLines();
+        currentPiece = randomPiece();
+        if(collide(0,0,currentPiece.shape)) gameOver();
+    }
+    draw();
+}
 
-// --------------------- Correct Answer ---------------------
-function correctAnswer() {
-    document.getElementById("quiz").classList.add("hidden");
+function clearLines() {
+    board = board.filter(row => row.some(v => v===0));
+    while(board.length<ROWS) board.unshift(Array(COLS).fill(0));
+}
+
+function gameOver() {
+    clearInterval(gameInterval);
+    setTimeout(endTetris, 300);
+}
+
+function tetrisLoop() {
+    dropPiece();
+}
+
+function startTetrisGame() {
+    currentPiece = randomPiece();
+    draw();
+    gameInterval = setInterval(tetrisLoop, 600);
+}
+
+function endTetris() {
+    document.getElementById("tetris-screen").classList.add("hidden");
     document.getElementById("final").classList.remove("hidden");
-    document.getElementById("final").scrollIntoView({behavior: "smooth"});
-
-    // Disable quiz buttons permanently to prevent accidental taps
-    document.querySelectorAll("#quiz button").forEach(btn => btn.disabled = true);
-
     startCountdown();
     moveNoMaybeButtons();
 }
 
-// --------------------- Countdown ---------------------
+// start game
+startTetrisGame();
+
+// ------------------ FINAL VALENTINE ------------------
+let buttonsActive = true;
+let countdownInterval;
+
 function startCountdown() {
     let counter = 5;
     const countdown = document.getElementById("countdown");
-
     countdownInterval = setInterval(() => {
         counter--;
         countdown.innerText = counter;
-
-        if (counter <= 0) {
+        if(counter<=0) {
             clearInterval(countdownInterval);
             countdown.innerText = "Time's up! Click YES 😏";
         }
-    }, 1000);
+    },1000);
 }
 
-// --------------------- Moving Buttons ---------------------
 function moveNoMaybeButtons() {
     const noBtn = document.getElementById("noBtn");
     const maybeBtn = document.getElementById("maybeBtn");
-
     [noBtn, maybeBtn].forEach(btn => {
         const dodge = (e) => {
-            if (!buttonsActive) return;
-            e.preventDefault();
-            e.stopPropagation();
-            const x = Math.random() * (window.innerWidth - btn.offsetWidth);
-            const y = Math.random() * (window.innerHeight - btn.offsetHeight);
-            btn.style.left = x + "px";
-            btn.style.top = y + "px";
+            if(!buttonsActive) return;
+            e.preventDefault(); e.stopPropagation();
+            const x = Math.random()*(window.innerWidth-btn.offsetWidth);
+            const y = Math.random()*(window.innerHeight-btn.offsetHeight);
+            btn.style.left=x+"px"; btn.style.top=y+"px";
         };
-        btn.addEventListener("pointerover", dodge);  // desktop
-        btn.addEventListener("pointerdown", dodge);  // mobile touch
+        btn.addEventListener("pointerdown", dodge);
     });
 }
 
-// --------------------- Celebration ---------------------
 function celebrate() {
-    buttonsActive = false; // disables button movement
+    buttonsActive=false;
     document.getElementById("final").classList.add("hidden");
     document.getElementById("celebration").classList.remove("hidden");
-    document.getElementById("celebration").scrollIntoView({behavior: "smooth"});
-
-    // Confetti
-    for (let i = 0; i < 100; i++) {
-        let confetti = document.createElement("div");
-        confetti.classList.add("confetti");
-        confetti.style.left = Math.random() * 100 + "vw";
-        confetti.style.backgroundColor = ["#fff","#ff2e63","#ffd700","#00f5d4"][Math.floor(Math.random()*4)];
-        confetti.style.animationDuration = (Math.random() * 3 + 2) + "s";
-        document.body.appendChild(confetti);
+    for (let i=0; i<100; i++){
+        let c=document.createElement("div");
+        c.className="confetti";
+        c.style.background=["#fff","#ff2e63","#ffd700","#00f5d4"][Math.floor(Math.random()*4)];
+        c.style.left=Math.random()*100+"vw";
+        document.body.appendChild(c);
     }
-
-    // Floating Hearts
-    for (let i = 0; i < 50; i++) {
-        let heart = document.createElement("div");
-        heart.innerText = "💖";
-        heart.style.position = "fixed";
-        heart.style.left = Math.random() * 100 + "vw";
-        heart.style.top = "100vh";
-        heart.style.fontSize = Math.random() * 30 + 20 + "px";
-        document.body.appendChild(heart);
-        floatHeart(heart);
-    }
-}
-
-function floatHeart(el) {
-    let top = window.innerHeight;
-    let id = setInterval(() => {
-        top -= Math.random() * 5 + 2;
-        el.style.top = top + "px";
-        if (top < -50) el.remove();
-    }, 20);
 }
 </script>
-
 </body>
 </html>
