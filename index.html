@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Operation: Become My Valentine 💘</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #ff4e8b, #ff9a9e);
+    color: white;
+    overflow: hidden;
+}
+
+.container {
+    padding: 40px;
+}
+
+button {
+    padding: 12px 25px;
+    font-size: 18px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    margin: 10px;
+    transition: 0.3s;
+}
+
+.yes-btn {
+    background-color: #fff;
+    color: #ff4e8b;
+}
+
+.no-btn {
+    background-color: #ff2e63;
+    color: white;
+    position: absolute;
+}
+
+.hidden {
+    display: none;
+}
+
+.confetti {
+    position: fixed;
+    width: 10px;
+    height: 10px;
+    background: white;
+    top: -10px;
+    animation: fall 3s linear infinite;
+}
+
+@keyframes fall {
+    to {
+        transform: translateY(100vh) rotate(360deg);
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container" id="quiz">
+    <h1>Valentine Qualification Test 💖</h1>
+    <p>Question 1: Who is the luckiest girl alive?</p>
+    <button onclick="wrongAnswer()">A) Beyoncé</button>
+    <button onclick="wrongAnswer()">B) Some random model</button>
+    <button onclick="correctAnswer()">C) Me obviously</button>
+</div>
+
+<div class="container hidden" id="final">
+    <h1>Will You Be My Valentine? 💘</h1>
+    <button class="yes-btn" onclick="celebrate()">YES 💖</button>
+    <button class="no-btn" id="noBtn">no 🙄</button>
+</div>
+
+<div class="container hidden" id="celebration">
+    <h1>🎉 CONGRATULATIONS 🎉</h1>
+    <h2>You are now officially stuck with me 😌💞</h2>
+</div>
+
+<script>
+function wrongAnswer() {
+    alert("Incorrect. Please try again, future Valentine 😌");
+}
+
+function correctAnswer() {
+    document.getElementById("quiz").classList.add("hidden");
+    document.getElementById("final").classList.remove("hidden");
+    moveNoButton();
+}
+
+function moveNoButton() {
+    const noBtn = document.getElementById("noBtn");
+    noBtn.addEventListener("mouseover", () => {
+        const x = Math.random() * (window.innerWidth - 100);
+        const y = Math.random() * (window.innerHeight - 50);
+        noBtn.style.left = x + "px";
+        noBtn.style.top = y + "px";
+    });
+}
+
+function celebrate() {
+    document.getElementById("final").classList.add("hidden");
+    document.getElementById("celebration").classList.remove("hidden");
+    createConfetti();
+}
+
+function createConfetti() {
+    for (let i = 0; i < 100; i++) {
+        let confetti = document.createElement("div");
+        confetti.classList.add("confetti");
+        confetti.style.left = Math.random() * 100 + "vw";
+        confetti.style.backgroundColor = 
+            ["#fff","#ff2e63","#ffd700","#00f5d4"][Math.floor(Math.random()*4)];
+        confetti.style.animationDuration = (Math.random() * 3 + 2) + "s";
+        document.body.appendChild(confetti);
+    }
+}
+</script>
+
+</body>
+</html>
