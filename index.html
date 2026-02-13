@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Valentine Games 💘</title>
 <style>
-body {
+html, body {
     margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
     font-family: Arial, sans-serif;
     background: linear-gradient(135deg, #ff4e8b, #ff9a9e);
     color:white;
@@ -34,11 +37,19 @@ button:hover {transform:scale(1.05); background:#ff69b4;}
 .confetti {width:10px;height:10px;position:fixed;top:-10px;animation:fall 3s linear infinite;}
 @keyframes fall {to {transform:translateY(100vh) rotate(360deg);}}
 
-/* Tetris */
-#tetris {background:#000;width:200px;height:400px;position:relative;margin:10px auto;}
+/* Tetris full screen */
+#tetris-screen {
+    width:100vw; height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    background: linear-gradient(135deg, #ff4e8b, #ff9a9e);
+}
+#tetris {background:#000;width:90vw;height:80vh;position:relative;}
 
 /* Sudoku */
-#sudoku-screen {display:flex;flex-direction:column;align-items:center;justify-content:center;}
+#sudoku-screen {display:flex;flex-direction:column;align-items:center;justify-content:center;width:100vw;height:100vh;}
 #sudoku-grid {display:grid;grid-template-columns:repeat(4,50px);grid-gap:5px;margin:20px;}
 .sudoku-cell {width:50px;height:50px;background:#fff;color:#000;font-size:24px;display:flex;justify-content:center;align-items:center;cursor:pointer;user-select:none;}
 .sudoku-cell.prefilled {background:#ddd;cursor:default;}
@@ -59,7 +70,6 @@ button:hover {transform:scale(1.05); background:#ff69b4;}
         <button onclick="movePiece(1)">▶️</button>
         <button onclick="dropPiece()">⬇️</button>
     </div>
-    <p>Play Tetris! When finished, a Sudoku game appears.</p>
 </div>
 
 <!-- SUDOKU -->
@@ -91,7 +101,6 @@ button:hover {transform:scale(1.05); background:#ff69b4;}
 const COLS=10, ROWS=20;
 let board=Array.from({length:ROWS},()=>Array(COLS).fill(0));
 let currentPiece, gameInterval;
-
 const SHAPES=[
     [[1,1,1],[0,1,0]],
     [[2,2],[2,2]],
@@ -99,46 +108,25 @@ const SHAPES=[
     [[4,4,0],[0,4,4]],
     [[5,5,5,5]]
 ];
-const COLOR="#fff"; // bright white
+const COLOR="#fff";
 
 function randomPiece(){let shape=SHAPES[Math.floor(Math.random()*SHAPES.length)]; return {shape,x:3,y:0};}
-
 function draw(){
     const div=document.getElementById("tetris");
     div.innerHTML="";
-    board.forEach((row,r)=>{
-        row.forEach((cell,c)=>{
-            if(cell){
-                let block=document.createElement("div");
-                block.style.position="absolute";
-                block.style.width="20px"; block.style.height="20px";
-                block.style.background=COLOR; block.style.border="1px solid #000";
-                block.style.left=(c*20)+"px"; block.style.top=(r*20)+"px";
-                div.appendChild(block);
-            }
-        });
-    });
-    if(currentPiece){
-        currentPiece.shape.forEach((row,r)=>
-            row.forEach((v,c)=>{
-                if(v){
-                    let block=document.createElement("div");
-                    block.style.position="absolute"; block.style.width="20px"; block.style.height="20px";
-                    block.style.background=COLOR; block.style.border="1px solid #000";
-                    block.style.left=((currentPiece.x+c)*20)+"px"; block.style.top=((currentPiece.y+r)*20)+"px";
-                    div.appendChild(block);
-                }
-            })
-        );
-    }
+    board.forEach((row,r)=>{row.forEach((cell,c)=>{if(cell){let block=document.createElement("div");
+        block.style.position="absolute"; block.style.width="20px"; block.style.height="20px";
+        block.style.background=COLOR; block.style.border="1px solid #000";
+        block.style.left=(c*20)+"px"; block.style.top=(r*20)+"px"; div.appendChild(block);}
+    });});
+    if(currentPiece){currentPiece.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v){
+        let block=document.createElement("div"); block.style.position="absolute"; block.style.width="20px"; block.style.height="20px";
+        block.style.background=COLOR; block.style.border="1px solid #000";
+        block.style.left=((currentPiece.x+c)*20)+"px"; block.style.top=((currentPiece.y+r)*20)+"px";
+        div.appendChild(block);
+    }}));}
 }
-
-function collide(x,y,shape){
-    return shape.some((row,r)=>
-        row.some((v,c)=>v && (currentPiece.y+y+r>=ROWS||currentPiece.x+x+c<0||currentPiece.x+x+c>=COLS||board[currentPiece.y+y+r][currentPiece.x+x+c]))
-    );
-}
-
+function collide(x,y,shape){return shape.some((row,r)=>row.some((v,c)=>v && (currentPiece.y+y+r>=ROWS||currentPiece.x+x+c<0||currentPiece.x+x+c>=COLS||board[currentPiece.y+y+r][currentPiece.x+x+c])));}
 function merge(){currentPiece.shape.forEach((row,r)=>row.forEach((v,c)=>{if(v)board[currentPiece.y+r][currentPiece.x+c]=v;}));}
 function rotatePiece(){let rotated=currentPiece.shape[0].map((col,i)=>currentPiece.shape.map(row=>row[i]).reverse()); if(!collide(0,0,rotated)) currentPiece.shape=rotated; draw();}
 function movePiece(dir){if(!collide(dir,0,currentPiece.shape)) currentPiece.x+=dir; draw();}
@@ -148,37 +136,28 @@ function gameOver(){clearInterval(gameInterval); setTimeout(endTetris,300);}
 function tetrisLoop(){dropPiece();}
 function startTetrisGame(){currentPiece=randomPiece(); draw(); gameInterval=setInterval(tetrisLoop,600);}
 function endTetris(){document.getElementById("tetris-screen").classList.add("hidden");document.getElementById("sudoku-screen").classList.remove("hidden"); createSudokuGrid();}
-
 startTetrisGame();
 
 // ================= SUDOKU 4x4 =================
 let sudokuSolution=[[1,2,3,4],[3,4,1,2],[4,1,2,3],[2,3,4,1]];
 let prefilled=[[1,0,0,4],[0,4,0,0],[0,0,2,0],[2,0,0,1]];
-
 function createSudokuGrid(){
     const grid=document.getElementById("sudoku-grid"); grid.innerHTML="";
-    for(let r=0;r<4;r++){
-        for(let c=0;c<4;c++){
-            let cell=document.createElement("div");
-            cell.className="sudoku-cell";
-            if(prefilled[r][c]!==0){cell.classList.add("prefilled"); cell.innerText=prefilled[r][c];}
-            else {cell.addEventListener("click",()=>fillCell(cell,r,c));}
-            cell.dataset.row=r; cell.dataset.col=c;
-            grid.appendChild(cell);
-        }
-    }
+    for(let r=0;r<4;r++){for(let c=0;c<4;c++){
+        let cell=document.createElement("div"); cell.className="sudoku-cell";
+        if(prefilled[r][c]!==0){cell.classList.add("prefilled"); cell.innerText=prefilled[r][c];}
+        else {cell.addEventListener("click",()=>fillCell(cell,r,c));}
+        cell.dataset.row=r; cell.dataset.col=c;
+        grid.appendChild(cell);
+    }}
 }
-
 function fillCell(cell,r,c){
-    let val=prompt("Enter a number 1-4:"); val=parseInt(val);
+    let val=prompt("Enter 1-4:"); val=parseInt(val);
     if(val>=1 && val<=4){cell.innerText=val;}
 }
-
 function checkSudoku(){
-    const cells=document.querySelectorAll(".sudoku-cell");
-    let correct=true;
-    cells.forEach(cell=>{
-        const r=parseInt(cell.dataset.row); const c=parseInt(cell.dataset.col);
+    const cells=document.querySelectorAll(".sudoku-cell"); let correct=true;
+    cells.forEach(cell=>{const r=parseInt(cell.dataset.row); const c=parseInt(cell.dataset.col);
         if(cell.innerText!="") if(parseInt(cell.innerText)!==sudokuSolution[r][c]) correct=false;
     });
     if(correct){alert("Sudoku Complete!"); document.getElementById("sudoku-screen").classList.add("hidden"); document.getElementById("final").classList.remove("hidden"); startCountdown(); moveNoMaybeButtons();}
@@ -187,43 +166,17 @@ function checkSudoku(){
 
 // ================= FINAL VALENTINE =================
 let buttonsActive=true; let countdownInterval;
-
-function startCountdown(){
-    let counter=5;
-    const countdown=document.getElementById("countdown");
-    countdownInterval=setInterval(()=>{
-        counter--; countdown.innerText=counter;
-        if(counter<=0){clearInterval(countdownInterval); countdown.innerText="Time's up! Click YES 😏";}
-    },1000);
+function startCountdown(){let counter=5; const countdown=document.getElementById("countdown");
+    countdownInterval=setInterval(()=>{counter--; countdown.innerText=counter; if(counter<=0){clearInterval(countdownInterval); countdown.innerText="Time's up! Click YES 😏";}},1000);
 }
-
-function moveNoMaybeButtons(){
-    const noBtn=document.getElementById("noBtn"); const maybeBtn=document.getElementById("maybeBtn");
-    [noBtn,maybeBtn].forEach(btn=>{
-        const dodge=(e)=>{
-            if(!buttonsActive) return;
-            e.preventDefault(); e.stopPropagation();
-            const x=Math.random()*(window.innerWidth-btn.offsetWidth);
-            const y=Math.random()*(window.innerHeight-btn.offsetHeight);
-            btn.style.left=x+"px"; btn.style.top=y+"px";
-        };
-        btn.addEventListener("pointerdown",dodge);
-    });
-}
-
-function celebrate(){
-    buttonsActive=false;
-    document.getElementById("final").classList.add("hidden");
-    document.getElementById("celebration").classList.remove("hidden");
-
-    for(let i=0;i<100;i++){
-        let c=document.createElement("div");
-        c.className="confetti";
-        c.style.background=["#fff","#ff2e63","#ffd700","#00f5d4"][Math.floor(Math.random()*4)];
-        c.style.left=Math.random()*100+"vw";
-        document.body.appendChild(c);
-    }
-
+function moveNoMaybeButtons(){const noBtn=document.getElementById("noBtn"); const maybeBtn=document.getElementById("maybeBtn");
+    [noBtn,maybeBtn].forEach(btn=>{const dodge=(e)=>{if(!buttonsActive) return; e.preventDefault(); e.stopPropagation();
+        const x=Math.random()*(window.innerWidth-btn.offsetWidth); const y=Math.random()*(window.innerHeight-btn.offsetHeight);
+        btn.style.left=x+"px"; btn.style.top=y+"px";
+    }; btn.addEventListener("pointerdown",dodge);
+});}
+function celebrate(){buttonsActive=false; document.getElementById("final").classList.add("hidden"); document.getElementById("celebration").classList.remove("hidden");
+    for(let i=0;i<100;i++){let c=document.createElement("div"); c.className="confetti"; c.style.background=["#fff","#ff2e63","#ffd700","#00f5d4"][Math.floor(Math.random()*4)]; c.style.left=Math.random()*100+"vw"; document.body.appendChild(c);}
     document.getElementById("extraMessage").innerText="See you tomorrow at 7pm 💖";
 }
 </script>
