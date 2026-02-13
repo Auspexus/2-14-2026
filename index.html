@@ -144,11 +144,11 @@ function createHearts() {
 }
 
 function removeHeart(e) {
+    e.stopPropagation();
+    e.preventDefault();
     e.target.remove();
     heartsClicked++;
-    if (heartsClicked === totalHearts) {
-        startQuiz();
-    }
+    if (heartsClicked === totalHearts) startQuiz();
 }
 
 function startGameTimer() {
@@ -206,26 +206,29 @@ function startCountdown() {
     }, 1000);
 }
 
-// --------------------- Moving Buttons ---------------------
+// --------------------- Moving Buttons (mobile-proof) ---------------------
 function moveNoMaybeButtons() {
     const noBtn = document.getElementById("noBtn");
     const maybeBtn = document.getElementById("maybeBtn");
+
     [noBtn, maybeBtn].forEach(btn => {
-        const dodge = () => {
-            if(!buttonsActive) return;
-            const x = Math.random() * (window.innerWidth - 100);
-            const y = Math.random() * (window.innerHeight - 50);
+        const dodge = (e) => {
+            if (!buttonsActive) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const x = Math.random() * (window.innerWidth - btn.offsetWidth);
+            const y = Math.random() * (window.innerHeight - btn.offsetHeight);
             btn.style.left = x + "px";
             btn.style.top = y + "px";
         };
-        btn.addEventListener("mouseover", dodge);
-        btn.addEventListener("touchstart", dodge);
+        btn.addEventListener("pointerover", dodge);  // desktop
+        btn.addEventListener("pointerdown", dodge);  // mobile touch
     });
 }
 
 // --------------------- Celebration ---------------------
 function celebrate() {
-    buttonsActive = false;
+    buttonsActive = false; // disables button movement
     document.getElementById("final").classList.add("hidden");
     document.getElementById("celebration").classList.remove("hidden");
     document.getElementById("celebration").scrollIntoView({behavior: "smooth"});
