@@ -183,11 +183,17 @@ function wrongAnswer() {
 }
 
 let buttonsActive = true;
+let countdownInterval;
 
+// --------------------- Correct Answer ---------------------
 function correctAnswer() {
     document.getElementById("quiz").classList.add("hidden");
     document.getElementById("final").classList.remove("hidden");
     document.getElementById("final").scrollIntoView({behavior: "smooth"});
+
+    // Disable quiz buttons permanently to prevent accidental taps
+    document.querySelectorAll("#quiz button").forEach(btn => btn.disabled = true);
+
     startCountdown();
     moveNoMaybeButtons();
 }
@@ -196,17 +202,19 @@ function correctAnswer() {
 function startCountdown() {
     let counter = 5;
     const countdown = document.getElementById("countdown");
-    const interval = setInterval(() => {
+
+    countdownInterval = setInterval(() => {
         counter--;
         countdown.innerText = counter;
+
         if (counter <= 0) {
-            clearInterval(interval);
+            clearInterval(countdownInterval);
             countdown.innerText = "Time's up! Click YES 😏";
         }
     }, 1000);
 }
 
-// --------------------- Moving Buttons (mobile-proof) ---------------------
+// --------------------- Moving Buttons ---------------------
 function moveNoMaybeButtons() {
     const noBtn = document.getElementById("noBtn");
     const maybeBtn = document.getElementById("maybeBtn");
