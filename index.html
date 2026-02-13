@@ -15,12 +15,21 @@ body {
     overflow: hidden;
 }
 
+/* Full-screen container for each stage */
 .container {
+    width: 100vw;
+    height: 100vh;
     padding: 40px;
+    box-sizing: border-box;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 button {
-    padding: 12px 5vw;
+    padding: 3vw 5vw;
     font-size: 4vw;
     border: none;
     border-radius: 25px;
@@ -65,7 +74,7 @@ button:hover {
 }
 
 #countdown {
-    font-size: 6vw;
+    font-size: 8vw;
     margin: 20px;
     font-weight: bold;
 }
@@ -156,6 +165,7 @@ function startGameTimer() {
 function startQuiz() {
     document.getElementById("game").classList.add("hidden");
     document.getElementById("quiz").classList.remove("hidden");
+    document.getElementById("quiz").scrollIntoView({behavior: "smooth"});
 }
 
 createHearts();
@@ -177,6 +187,7 @@ let buttonsActive = true;
 function correctAnswer() {
     document.getElementById("quiz").classList.add("hidden");
     document.getElementById("final").classList.remove("hidden");
+    document.getElementById("final").scrollIntoView({behavior: "smooth"});
     startCountdown();
     moveNoMaybeButtons();
 }
@@ -217,6 +228,7 @@ function celebrate() {
     buttonsActive = false;
     document.getElementById("final").classList.add("hidden");
     document.getElementById("celebration").classList.remove("hidden");
+    document.getElementById("celebration").scrollIntoView({behavior: "smooth"});
 
     // Confetti
     for (let i = 0; i < 100; i++) {
